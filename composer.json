@@ -68,7 +68,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "NettSite\\Messenger\\MessengerServiceProvider"
+                "NettSite\\Messenger\\MessengerServiceProvider",
+                "NettSite\\Messenger\\Filament\\MessengerPanelProvider"
             ],
             "aliases": {
                 "Messenger": "NettSite\\Messenger\\Facades\\Messenger"

@@ -12,5 +12,6 @@ return [
     'panel' => [
         'id' => 'messenger',
         'path' => 'messenger',
+        'guard' => 'web', // set to 'messenger' to use MessengerUser as the panel auth model
     ],
 ];
