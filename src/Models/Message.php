@@ -7,8 +7,18 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use NettSite\Messenger\Database\Factories\MessageFactory;
 
+/**
+ * @property string $id
+ * @property string $body
+ * @property string|null $url
+ * @property string|null $sender_type
+ * @property string|null $sender_id
+ * @property Carbon|null $scheduled_at
+ * @property Carbon|null $sent_at
+ */
 class Message extends Model
 {
     use HasFactory;
@@ -40,16 +50,19 @@ class Message extends Model
         return $this->morphTo();
     }
 
+    /** @return HasMany<MessageRecipient, $this> */
     public function recipients(): HasMany
     {
         return $this->hasMany(MessageRecipient::class);
     }
 
+    /** @return HasMany<MessageReceipt, $this> */
     public function receipts(): HasMany
     {
         return $this->hasMany(MessageReceipt::class);
     }
 
+    /** @return HasMany<Reply, $this> */
     public function replies(): HasMany
     {
         return $this->hasMany(Reply::class);

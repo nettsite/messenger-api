@@ -7,8 +7,17 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Carbon;
 use NettSite\Messenger\Database\Factories\DeviceTokenFactory;
 
+/**
+ * @property string $id
+ * @property string $user_type
+ * @property string $user_id
+ * @property string $token
+ * @property string $platform
+ * @property Carbon|null $last_seen_at
+ */
 class DeviceToken extends Model
 {
     use HasFactory;

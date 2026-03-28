@@ -6,6 +6,12 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property string $id
+ * @property string $message_id
+ * @property string $recipient_type
+ * @property string|null $recipient_id
+ */
 class MessageRecipient extends Model
 {
     use HasUuids;

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->text('body');
             $table->string('url')->nullable();
-            $table->string('sender_type');
-            $table->char('sender_id', 36);
+            $table->string('sender_type')->nullable();
+            $table->char('sender_id', 36)->nullable();
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
