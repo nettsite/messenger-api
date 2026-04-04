@@ -18,6 +18,7 @@ Route::prefix('messenger')->group(function () {
         Route::get('messages', [MessagesController::class, 'index']);
         Route::get('messages/poll', [MessagesController::class, 'poll']);
         Route::post('messages/{message}/read', [MessagesController::class, 'markRead']);
+        Route::get('messages/{message}/replies', [RepliesController::class, 'index']);
         Route::post('messages/{message}/replies', [RepliesController::class, 'store']);
     });
 });

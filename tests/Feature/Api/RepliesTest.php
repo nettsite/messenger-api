@@ -51,3 +51,28 @@ it('requires authentication to reply', function () {
         'body' => 'Unauthenticated reply',
     ])->assertUnauthorized();
 });
+
+it('returns replies for a message', function () {
+    $user = MessengerUser::factory()->create();
+    $message = Message::factory()->create();
+
+    $reply = Reply::create([
+        'message_id' => $message->getKey(),
+        'user_type' => MessengerUser::class,
+        'user_id' => $user->getKey(),
+        'body' => 'A reply',
+    ]);
+
+    $this->actingAs($user, 'sanctum')
+        ->getJson("/api/messenger/messages/{$message->getKey()}/replies")
+        ->assertOk()
+        ->assertJsonCount(1)
+        ->assertJsonPath('0.id', $reply->getKey());
+});
+
+it('requires authentication to list replies', function () {
+    $message = Message::factory()->create();
+
+    $this->getJson("/api/messenger/messages/{$message->getKey()}/replies")
+        ->assertUnauthorized();
+});

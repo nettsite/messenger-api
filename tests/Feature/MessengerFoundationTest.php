@@ -4,6 +4,7 @@ use NettSite\Messenger\Models\DeviceToken;
 use NettSite\Messenger\Models\Group;
 use NettSite\Messenger\Models\Message;
 use NettSite\Messenger\Models\MessageReceipt;
+use NettSite\Messenger\Models\MessageRecipient;
 use NettSite\Messenger\Models\MessengerUser;
 
 it('can create a messenger user', function () {
@@ -72,16 +73,19 @@ it('tracks read and recipient counts on a message', function () {
         'sender_id' => $sender->getKey(),
     ]);
 
+    MessageRecipient::create([
+        'message_id' => $message->getKey(),
+        'recipient_type' => 'all',
+        'recipient_id' => null,
+    ]);
+
     $userA = MessengerUser::factory()->create();
     $userB = MessengerUser::factory()->create();
 
     $userA->markMessageRead($message);
-    MessageReceipt::create([
-        'message_id' => $message->getKey(),
-        'user_type' => MessengerUser::class,
-        'user_id' => $userB->getKey(),
-    ]);
 
-    expect($message->recipientCount())->toBe(2)
+    // recipientCount resolves intended audience: 'all' expands to total user count.
+    // The sender + userA + userB = 3 users exist; all three are included.
+    expect($message->recipientCount())->toBe(MessengerUser::count())
         ->and($message->readCount())->toBe(1);
 });

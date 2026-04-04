@@ -40,9 +40,10 @@ class AuthController extends Controller
             return response()->json(['status' => 'pending'], 202);
         }
 
-        $user->registerDeviceToken($request->fcm_token, $request->platform);
-        $user->tokens()->where('name', $request->fcm_token)->delete();
-        $sanctumToken = $user->createToken($request->fcm_token)->plainTextToken;
+        $this->registerDevice($user, $request->fcm_token, $request->platform);
+        $tokenName = $request->fcm_token ?? $request->platform;
+        $user->tokens()->where('name', $tokenName)->delete();
+        $sanctumToken = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'user_id' => $user->getKey(),
@@ -75,9 +76,10 @@ class AuthController extends Controller
             ], 403);
         }
 
-        $user->registerDeviceToken($request->fcm_token, $request->platform);
-        $user->tokens()->where('name', $request->fcm_token)->delete();
-        $sanctumToken = $user->createToken($request->fcm_token)->plainTextToken;
+        $this->registerDevice($user, $request->fcm_token, $request->platform);
+        $tokenName = $request->fcm_token ?? $request->platform;
+        $user->tokens()->where('name', $tokenName)->delete();
+        $sanctumToken = $user->createToken($tokenName)->plainTextToken;
 
         return response()->json([
             'user_id' => $user->getKey(),
@@ -95,6 +97,14 @@ class AuthController extends Controller
         $sanctumToken = $user->createToken($request->token)->plainTextToken;
 
         return response()->json(['token' => $sanctumToken]);
+    }
+
+    /** Register the FCM token if provided; no-op for web users with no token. */
+    private function registerDevice(MessengerUser $user, ?string $fcmToken, string $platform): void
+    {
+        if ($fcmToken) {
+            $user->registerDeviceToken($fcmToken, $platform);
+        }
     }
 
     public function logout(Request $request): JsonResponse

@@ -51,13 +51,22 @@ This is a **Laravel package** built on [spatie/laravel-package-tools](https://gi
 - Broadcast targets: individual user, group, or all users
 
 ### Authentication (Mobile API)
-Laravel Sanctum — social sign-on (Google/Android) planned for a later phase.
+Laravel Sanctum — email + password registration/login. Social sign-on planned for a later phase.
+
+Registration is controlled by `messenger.registration.mode` config (`MESSENGER_REGISTRATION_MODE` env):
+- `open` — self-register, immediately active, Sanctum token returned
+- `approval` — self-register, `status=pending`, no token until admin approves via Filament
+- `closed` — no self-registration; admin creates users in the Filament panel
 
 ### Filament Panel
 Admin UI for user management, group management, message composition (via `MessengerService`), and message history with aggregate read stats (e.g. "47/120 read").
 
+### Filament Panel
+Admin UI runs at `/messenger` (configurable). Uses **Filament 5.4.x** — action classes live under `Filament\Actions\*`, not `Filament\Tables\Actions\*`. Always use `search-docs` or Context7 before writing Filament code.
+
 ### Testing
 - Pest 4 with Orchestra Testbench — no running Laravel app needed
 - `tests/TestCase.php` registers the service provider and configures the `testing` database
+- Migration stubs are loaded alphabetically by `File::allFiles()` — name new stubs starting with `update_` (not `add_`) so they sort after `create_` stubs
 - `tests/ArchTest.php` enforces no `dd`/`dump`/`ray` in source
 - CI matrix: PHP 8.3–8.4 × Laravel 12–13 × prefer-lowest/stable

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use NettSite\Messenger\Database\Factories\MessageFactory;
 
 /**
@@ -75,6 +76,22 @@ class Message extends Model
 
     public function recipientCount(): int
     {
-        return $this->receipts()->count();
+        /** @var class-string<Model> $userModel */
+        $userModel = config('messenger.user_model') ?? MessengerUser::class;
+
+        $count = 0;
+
+        foreach ($this->recipients as $recipient) {
+            $count += match ($recipient->recipient_type) {
+                'all' => $userModel::count(),
+                'user' => 1,
+                'group' => DB::table('messenger_group_users')
+                    ->where('group_id', $recipient->recipient_id)
+                    ->count(),
+                default => 0,
+            };
+        }
+
+        return $count;
     }
 }

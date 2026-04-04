@@ -3,12 +3,20 @@
 namespace NettSite\Messenger\Http\Controllers;
 
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use NettSite\Messenger\Http\Requests\CreateReplyRequest;
 use NettSite\Messenger\Models\Message;
 
 class RepliesController extends Controller
 {
+    public function index(Request $request, Message $message): JsonResponse
+    {
+        $replies = $message->replies()->oldest()->get();
+
+        return response()->json($replies);
+    }
+
     public function store(CreateReplyRequest $request, Message $message): JsonResponse
     {
         $user = $request->user();

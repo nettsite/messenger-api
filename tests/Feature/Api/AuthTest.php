@@ -98,6 +98,30 @@ it('returns 422 when platform is invalid', function () {
     ])->assertUnprocessable()->assertJsonValidationErrors(['platform']);
 });
 
+it('registers a web user without an fcm token', function () {
+    config()->set('messenger.registration.mode', 'open');
+
+    $response = $this->postJson('/api/messenger/auth/register', [
+        'name' => 'Web User',
+        'email' => 'webuser@example.com',
+        'password' => 'secret1234',
+        'password_confirmation' => 'secret1234',
+        'platform' => 'web',
+    ]);
+
+    $response->assertOk()->assertJsonStructure(['user_id', 'token']);
+});
+
+it('logs in a web user without an fcm token', function () {
+    $user = MessengerUser::factory()->create(['password' => bcrypt('secret1234')]);
+
+    $this->postJson('/api/messenger/auth/login', [
+        'email' => $user->email,
+        'password' => 'secret1234',
+        'platform' => 'web',
+    ])->assertOk()->assertJsonStructure(['user_id', 'token']);
+});
+
 // ---------------------------------------------------------------------------
 // Login
 // ---------------------------------------------------------------------------
