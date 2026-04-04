@@ -2,10 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use NettSite\Messenger\Http\Controllers\AuthController;
+use NettSite\Messenger\Http\Controllers\ConfigController;
 use NettSite\Messenger\Http\Controllers\MessagesController;
 use NettSite\Messenger\Http\Controllers\RepliesController;
 
 Route::prefix('messenger')->group(function () {
+    Route::get('config', [ConfigController::class, 'show']);
+
     Route::middleware('throttle:5,1')->group(function () {
         Route::post('auth/register', [AuthController::class, 'register']);
         Route::post('auth/login', [AuthController::class, 'login']);

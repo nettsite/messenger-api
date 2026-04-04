@@ -18,4 +18,8 @@ return [
     'registration' => [
         'mode' => env('MESSENGER_REGISTRATION_MODE', 'open'), // 'open' | 'approval' | 'closed'
     ],
+
+    'polling' => [
+        'interval' => (int) env('MESSENGER_POLL_INTERVAL', 30), // seconds; used by web clients
+    ],
 ];
