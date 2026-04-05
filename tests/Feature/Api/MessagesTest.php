@@ -3,10 +3,10 @@
 use NettSite\Messenger\Models\Message;
 use NettSite\Messenger\Models\MessageReceipt;
 use NettSite\Messenger\Models\MessageRecipient;
-use NettSite\Messenger\Models\MessengerUser;
+use NettSite\Messenger\Tests\Models\User;
 
 it('returns paginated messages addressed to the authenticated user', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => now()]);
 
     MessageRecipient::create([
@@ -22,7 +22,7 @@ it('returns paginated messages addressed to the authenticated user', function ()
 });
 
 it('returns messages broadcast to all users', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => now()]);
 
     MessageRecipient::create([
@@ -38,7 +38,7 @@ it('returns messages broadcast to all users', function () {
 });
 
 it('does not return unsent messages', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => null]);
 
     MessageRecipient::create([
@@ -54,7 +54,7 @@ it('does not return unsent messages', function () {
 });
 
 it('poll returns unseen messages and creates delivery receipts', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => now()]);
 
     MessageRecipient::create([
@@ -77,7 +77,7 @@ it('poll returns unseen messages and creates delivery receipts', function () {
 });
 
 it('poll returns nothing on a second call once delivered', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => now()]);
 
     MessageRecipient::create([
@@ -95,7 +95,7 @@ it('poll returns nothing on a second call once delivered', function () {
 });
 
 it('marks a message as read', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create(['sent_at' => now()]);
 
     $this->actingAs($user, 'sanctum')

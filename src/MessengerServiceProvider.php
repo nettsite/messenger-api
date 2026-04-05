@@ -3,6 +3,7 @@
 namespace NettSite\Messenger;
 
 use Illuminate\Support\Facades\Route;
+use NettSite\Messenger\Commands\InstallCommand;
 use NettSite\Messenger\Commands\MessengerCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -16,8 +17,6 @@ class MessengerServiceProvider extends PackageServiceProvider
             ->hasConfigFile()
             ->hasViews()
             ->hasMigrations([
-                'create_messenger_users_table',
-                'update_messenger_users_add_status',
                 'create_messenger_device_tokens_table',
                 'create_messenger_groups_table',
                 'create_messenger_group_users_table',
@@ -27,7 +26,8 @@ class MessengerServiceProvider extends PackageServiceProvider
                 'create_messenger_replies_table',
             ])
             ->runsMigrations()
-            ->hasCommand(MessengerCommand::class);
+            ->hasCommand(MessengerCommand::class)
+            ->hasCommand(InstallCommand::class);
     }
 
     public function packageBooted(): void

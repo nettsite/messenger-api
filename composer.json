@@ -1,6 +1,6 @@
 {
     "name": "nettsite/messenger-api",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "This is my package messenger",
     "keywords": [
         "nettsite",
@@ -68,8 +68,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "NettSite\\Messenger\\MessengerServiceProvider",
-                "NettSite\\Messenger\\Filament\\MessengerPanelProvider"
+                "NettSite\\Messenger\\MessengerServiceProvider"
             ],
             "aliases": {
                 "Messenger": "NettSite\\Messenger\\Facades\\Messenger"

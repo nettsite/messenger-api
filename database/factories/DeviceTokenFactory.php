@@ -4,7 +4,6 @@ namespace NettSite\Messenger\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use NettSite\Messenger\Models\DeviceToken;
-use NettSite\Messenger\Models\MessengerUser;
 
 /**
  * @extends Factory<DeviceToken>
@@ -15,10 +14,12 @@ class DeviceTokenFactory extends Factory
 
     public function definition(): array
     {
-        $user = MessengerUser::factory()->create();
+        /** @var class-string $userModel */
+        $userModel = config('messenger.user_model');
+        $user = $userModel::factory()->create();
 
         return [
-            'user_type' => MessengerUser::class,
+            'user_type' => $userModel,
             'user_id' => $user->getKey(),
             'token' => fake()->uuid(),
             'platform' => fake()->randomElement(['android', 'ios']),

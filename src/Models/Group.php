@@ -26,6 +26,9 @@ class Group extends Model
 
     public function users(): MorphToMany
     {
-        return $this->morphedByMany(MessengerUser::class, 'user', 'messenger_group_users');
+        /** @var class-string $userModel */
+        $userModel = config('messenger.user_model');
+
+        return $this->morphedByMany($userModel, 'user', 'messenger_group_users');
     }
 }

@@ -1,73 +1,155 @@
-# This is my package messenger
+# nettsite/messenger
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/nettsite/messenger.svg?style=flat-square)](https://packagist.org/packages/nettsite/messenger)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/nettsite/messenger/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/nettsite/messenger/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/nettsite/messenger/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/nettsite/messenger/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/nettsite/messenger.svg?style=flat-square)](https://packagist.org/packages/nettsite/messenger)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+A Laravel package for push-based messaging from your backend to mobile and web app users. Provides a Filament admin UI for composing and tracking messages, a REST API for mobile clients, and Firebase Cloud Messaging (FCM) delivery with a polling fallback.
 
-## Support us
+## Requirements
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/messenger.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/messenger)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+- PHP 8.4+
+- Laravel 12 or 13
+- Filament 5.x (for the admin panel integration)
+- Laravel Sanctum 4.x
 
 ## Installation
 
-You can install the package via composer:
+Install via Composer:
 
 ```bash
 composer require nettsite/messenger
 ```
 
-You can publish and run the migrations with:
+Run the installer:
 
 ```bash
-php artisan vendor:publish --tag="messenger-migrations"
-php artisan migrate
+php artisan messenger:install
 ```
 
-You can publish the config file with:
+This publishes the config file, publishes and runs the migrations, and prints the next steps.
 
-```bash
-php artisan vendor:publish --tag="messenger-config"
-```
+### Prepare your User model
 
-This is the contents of the published config file:
+Your application's User model must implement `MessengerAuthenticatable` and use the `HasMessenger` trait and `HasApiTokens`:
 
 ```php
-return [
-];
-```
+use Laravel\Sanctum\HasApiTokens;
+use NettSite\Messenger\Contracts\MessengerAuthenticatable;
+use NettSite\Messenger\Traits\HasMessenger;
 
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="messenger-views"
-```
-
-### Laravel Fortify
-
-If your application uses Laravel Fortify (e.g. the Livewire starter kit), Fortify's auth routes conflict with the Messenger Filament panel's auth routes. Add the following to `FortifyServiceProvider::register()`:
-
-```php
-public function register(): void
+class User extends Authenticatable implements MessengerAuthenticatable
 {
-    Fortify::ignoreRoutes();
+    use HasApiTokens, HasMessenger;
 }
 ```
 
-This lets the Messenger panel own its own auth routing. Fortify's action classes remain available and unaffected.
+### Register the Filament plugin
 
-## Usage
+Add `MessengerPlugin` to your Filament panel provider:
 
 ```php
-$messenger = new NettSite\Messenger();
-echo $messenger->echoPhrase('Hello, NettSite!');
+use NettSite\Messenger\Filament\MessengerPlugin;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        // ...
+        ->plugin(MessengerPlugin::make());
+}
 ```
+
+This adds **Messages** and **Groups** to your existing admin panel. No separate panel or login page is created.
+
+## Configuration
+
+```php
+// config/messenger.php
+
+return [
+    // Your application's User model
+    'user_model' => env('MESSENGER_USER_MODEL', 'App\Models\User'),
+
+    // Firebase Cloud Messaging credentials
+    'fcm' => [
+        'credentials' => env('MESSENGER_FCM_CREDENTIALS', storage_path('app/firebase-credentials.json')),
+        'project_id'  => env('MESSENGER_FCM_PROJECT_ID'),
+    ],
+
+    // 'open'   — API register endpoint creates users
+    // 'closed' — registration via API is disabled (403)
+    'registration' => [
+        'mode' => env('MESSENGER_REGISTRATION_MODE', 'open'),
+    ],
+
+    // Polling interval in seconds, sent to web clients via GET /api/messenger/config
+    'polling' => [
+        'interval' => env('MESSENGER_POLL_INTERVAL', 30),
+    ],
+];
+```
+
+## Mobile / Web API
+
+All endpoints are prefixed `/api/messenger/`. Authentication uses Sanctum bearer tokens.
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `config` | — | Returns polling interval |
+| POST | `auth/register` | — | Register a new user (open mode only) |
+| POST | `auth/login` | — | Login → Sanctum token |
+| DELETE | `auth/logout` | Bearer | Revoke current token |
+| POST | `auth/device` | Bearer | Update FCM device token |
+| GET | `messages` | Bearer | Paginated sent messages for the user |
+| GET | `messages/poll` | Bearer | Undelivered messages; stamps `delivered_at` |
+| POST | `messages/{id}/read` | Bearer | Mark a message read |
+| GET | `messages/{id}/replies` | Bearer | List replies on a message |
+| POST | `messages/{id}/replies` | Bearer | Submit a reply |
+
+## Sending messages
+
+Use the `Messenger` facade from your application code or a scheduled command:
+
+```php
+use NettSite\Messenger\Facades\Messenger;
+
+// Send to all users immediately
+Messenger::broadcast('Your order has shipped!', url: 'https://example.com/orders/123');
+
+// Send to a specific user
+Messenger::sendToUser($user, 'Your item is ready for collection.');
+
+// Send to a group
+Messenger::sendToGroup($group, 'Maintenance window tonight at 22:00.');
+
+// Schedule for later
+Messenger::broadcast('Happy New Year!', scheduledAt: now()->startOfYear()->addYear());
+```
+
+Scheduled messages are dispatched by the `messenger:send-scheduled` command. Add it to your scheduler:
+
+```php
+// bootstrap/app.php
+Schedule::command('messenger:send-scheduled')->everyMinute();
+```
+
+## FCM setup
+
+1. In the Firebase Console, generate a service account JSON key for your project.
+2. Place the file at `storage/app/firebase-credentials.json` (or set `MESSENGER_FCM_CREDENTIALS`).
+3. Set `MESSENGER_FCM_PROJECT_ID` to your Firebase project ID.
+
+For devices without Google Mobile Services (e.g. post-2019 Huawei), the polling endpoint (`GET messages/poll`) serves as the delivery fallback.
+
+## Standalone panel (optional)
+
+If your application does not have an existing Filament panel, you can use the bundled standalone panel instead of `MessengerPlugin`. Add `MessengerPanelProvider` manually to `bootstrap/providers.php`:
+
+```php
+NettSite\Messenger\Filament\MessengerPanelProvider::class,
+```
+
+The standalone panel is configured via the `panel` key in `config/messenger.php`.
 
 ## Testing
 
@@ -78,19 +160,6 @@ composer test
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
-
-## Security Vulnerabilities
-
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
-
-## Credits
-
-- [NettSite](https://github.com/nettsite)
-- [All Contributors](../../contributors)
 
 ## License
 

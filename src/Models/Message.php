@@ -77,7 +77,7 @@ class Message extends Model
     public function recipientCount(): int
     {
         /** @var class-string<Model> $userModel */
-        $userModel = config('messenger.user_model') ?? MessengerUser::class;
+        $userModel = config('messenger.user_model');
 
         $count = 0;
 

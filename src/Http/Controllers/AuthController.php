@@ -2,18 +2,18 @@
 
 namespace NettSite\Messenger\Http\Controllers;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\PersonalAccessToken;
+use NettSite\Messenger\Contracts\MessengerAuthenticatable;
 use NettSite\Messenger\Enums\RegistrationMode;
-use NettSite\Messenger\Enums\UserStatus;
 use NettSite\Messenger\Http\Requests\LoginRequest;
 use NettSite\Messenger\Http\Requests\RegisterDeviceRequest;
 use NettSite\Messenger\Http\Requests\RegisterUserRequest;
-use NettSite\Messenger\Models\MessengerUser;
 
 class AuthController extends Controller
 {
@@ -25,20 +25,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Registration is closed.'], 403);
         }
 
-        $status = $mode === RegistrationMode::Approval
-            ? UserStatus::Pending
-            : UserStatus::Active;
+        /** @var class-string<Authenticatable> $userModel */
+        $userModel = config('messenger.user_model');
 
-        $user = MessengerUser::create([
+        /** @var Authenticatable $user */
+        $user = $userModel::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'status' => $status,
         ]);
-
-        if ($status === UserStatus::Pending) {
-            return response()->json(['status' => 'pending'], 202);
-        }
 
         $this->registerDevice($user, $request->fcm_token, $request->platform);
         $tokenName = $request->fcm_token ?? $request->platform;
@@ -53,27 +48,13 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): JsonResponse
     {
-        /** @var class-string<MessengerUser> $userModel */
-        $userModel = config('messenger.user_model') ?? MessengerUser::class;
+        /** @var class-string<Authenticatable> $userModel */
+        $userModel = config('messenger.user_model');
 
         $user = $userModel::where('email', $request->email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             return response()->json(['message' => 'Invalid credentials.'], 401);
-        }
-
-        if ($user->isPending()) {
-            return response()->json([
-                'message' => 'Your account is pending admin approval.',
-                'status' => 'pending',
-            ], 403);
-        }
-
-        if ($user->isSuspended()) {
-            return response()->json([
-                'message' => 'Your account has been suspended.',
-                'status' => 'suspended',
-            ], 403);
         }
 
         $this->registerDevice($user, $request->fcm_token, $request->platform);
@@ -89,7 +70,7 @@ class AuthController extends Controller
 
     public function refreshDevice(RegisterDeviceRequest $request): JsonResponse
     {
-        /** @var MessengerUser $user */
+        /** @var MessengerAuthenticatable $user */
         $user = Auth::user();
 
         $user->registerDeviceToken($request->token, $request->platform);
@@ -100,7 +81,7 @@ class AuthController extends Controller
     }
 
     /** Register the FCM token if provided; no-op for web users with no token. */
-    private function registerDevice(MessengerUser $user, ?string $fcmToken, string $platform): void
+    private function registerDevice(MessengerAuthenticatable $user, ?string $fcmToken, string $platform): void
     {
         if ($fcmToken) {
             $user->registerDeviceToken($fcmToken, $platform);

@@ -16,7 +16,6 @@ use NettSite\Messenger\Filament\Resources\MessageResource\Pages;
 use NettSite\Messenger\Filament\Resources\MessageResource\RelationManagers\RepliesRelationManager;
 use NettSite\Messenger\Models\Group;
 use NettSite\Messenger\Models\Message;
-use NettSite\Messenger\Models\MessengerUser;
 
 class MessageResource extends Resource
 {
@@ -47,8 +46,8 @@ class MessageResource extends Resource
             Select::make('recipient_id')
                 ->label('Recipient')
                 ->options(function (Get $get) {
-                    /** @var class-string<MessengerUser> $userModel */
-                    $userModel = config('messenger.user_model') ?? MessengerUser::class;
+                    /** @var class-string $userModel */
+                    $userModel = config('messenger.user_model');
 
                     return match ($get('recipient_type')) {
                         'group' => Group::pluck('name', 'id'),

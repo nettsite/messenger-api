@@ -1,11 +1,11 @@
 <?php
 
 use NettSite\Messenger\Models\Message;
-use NettSite\Messenger\Models\MessengerUser;
 use NettSite\Messenger\Models\Reply;
+use NettSite\Messenger\Tests\Models\User;
 
 it('stores a reply to a message', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create();
 
     $this->actingAs($user, 'sanctum')
@@ -23,7 +23,7 @@ it('stores a reply to a message', function () {
 });
 
 it('rejects a reply with an empty body', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create();
 
     $this->actingAs($user, 'sanctum')
@@ -34,7 +34,7 @@ it('rejects a reply with an empty body', function () {
 });
 
 it('rejects a reply that exceeds 1000 characters', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create();
 
     $this->actingAs($user, 'sanctum')
@@ -53,12 +53,12 @@ it('requires authentication to reply', function () {
 });
 
 it('returns replies for a message', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $message = Message::factory()->create();
 
     $reply = Reply::create([
         'message_id' => $message->getKey(),
-        'user_type' => MessengerUser::class,
+        'user_type' => User::class,
         'user_id' => $user->getKey(),
         'body' => 'A reply',
     ]);

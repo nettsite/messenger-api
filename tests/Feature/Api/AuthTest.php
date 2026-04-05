@@ -1,8 +1,7 @@
 <?php
 
-use NettSite\Messenger\Enums\UserStatus;
 use NettSite\Messenger\Models\DeviceToken;
-use NettSite\Messenger\Models\MessengerUser;
+use NettSite\Messenger\Tests\Models\User;
 
 // ---------------------------------------------------------------------------
 // Registration
@@ -23,26 +22,7 @@ it('registers a new user in open mode and returns a sanctum token', function () 
     $response->assertOk()->assertJsonStructure(['user_id', 'token']);
 
     expect(DeviceToken::where('token', 'fcm-device-token')->exists())->toBeTrue();
-    expect(MessengerUser::where('email', 'jane@example.com')->first()->status)->toBe(UserStatus::Active);
-});
-
-it('returns 202 pending status when registration mode is approval', function () {
-    config()->set('messenger.registration.mode', 'approval');
-
-    $response = $this->postJson('/api/messenger/auth/register', [
-        'name' => 'Pending Pete',
-        'email' => 'pete@example.com',
-        'password' => 'secret1234',
-        'password_confirmation' => 'secret1234',
-        'fcm_token' => 'fcm-device-token',
-        'platform' => 'android',
-    ]);
-
-    $response->assertStatus(202)->assertJson(['status' => 'pending']);
-    $response->assertJsonMissing(['token']);
-
-    expect(MessengerUser::where('email', 'pete@example.com')->first()->status)->toBe(UserStatus::Pending);
-    expect(DeviceToken::count())->toBe(0);
+    expect(User::where('email', 'jane@example.com')->exists())->toBeTrue();
 });
 
 it('returns 403 when registration mode is closed', function () {
@@ -60,7 +40,7 @@ it('returns 403 when registration mode is closed', function () {
 
 it('returns 422 when email is already taken', function () {
     config()->set('messenger.registration.mode', 'open');
-    MessengerUser::factory()->create(['email' => 'taken@example.com']);
+    User::factory()->create(['email' => 'taken@example.com']);
 
     $this->postJson('/api/messenger/auth/register', [
         'name' => 'Duplicate',
@@ -113,7 +93,7 @@ it('registers a web user without an fcm token', function () {
 });
 
 it('logs in a web user without an fcm token', function () {
-    $user = MessengerUser::factory()->create(['password' => bcrypt('secret1234')]);
+    $user = User::factory()->create(['password' => bcrypt('secret1234')]);
 
     $this->postJson('/api/messenger/auth/login', [
         'email' => $user->email,
@@ -126,8 +106,8 @@ it('logs in a web user without an fcm token', function () {
 // Login
 // ---------------------------------------------------------------------------
 
-it('logs in an active user and returns a sanctum token and device token', function () {
-    $user = MessengerUser::factory()->create(['password' => bcrypt('secret1234')]);
+it('logs in a user and returns a sanctum token and device token', function () {
+    $user = User::factory()->create(['password' => bcrypt('secret1234')]);
 
     $response = $this->postJson('/api/messenger/auth/login', [
         'email' => $user->email,
@@ -142,7 +122,7 @@ it('logs in an active user and returns a sanctum token and device token', functi
 });
 
 it('returns 401 for invalid credentials', function () {
-    $user = MessengerUser::factory()->create(['password' => bcrypt('correct')]);
+    $user = User::factory()->create(['password' => bcrypt('correct')]);
 
     $this->postJson('/api/messenger/auth/login', [
         'email' => $user->email,
@@ -161,38 +141,12 @@ it('returns 401 for unknown email', function () {
     ])->assertUnauthorized();
 });
 
-it('returns 403 with pending status when user is pending', function () {
-    $user = MessengerUser::factory()->pending()->create(['password' => bcrypt('secret1234')]);
-
-    $response = $this->postJson('/api/messenger/auth/login', [
-        'email' => $user->email,
-        'password' => 'secret1234',
-        'fcm_token' => 'fcm-token',
-        'platform' => 'android',
-    ]);
-
-    $response->assertForbidden()->assertJson(['status' => 'pending']);
-});
-
-it('returns 403 with suspended status when user is suspended', function () {
-    $user = MessengerUser::factory()->suspended()->create(['password' => bcrypt('secret1234')]);
-
-    $response = $this->postJson('/api/messenger/auth/login', [
-        'email' => $user->email,
-        'password' => 'secret1234',
-        'fcm_token' => 'fcm-token',
-        'platform' => 'android',
-    ]);
-
-    $response->assertForbidden()->assertJson(['status' => 'suspended']);
-});
-
 // ---------------------------------------------------------------------------
 // FCM device token rotation
 // ---------------------------------------------------------------------------
 
 it('refreshes the device token for an authenticated user', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $tokenResult = $user->createToken('old-fcm-token');
 
     $response = $this->withToken($tokenResult->plainTextToken)
@@ -210,7 +164,7 @@ it('refreshes the device token for an authenticated user', function () {
 // ---------------------------------------------------------------------------
 
 it('logs out and revokes the sanctum token', function () {
-    $user = MessengerUser::factory()->create();
+    $user = User::factory()->create();
     $tokenResult = $user->createToken('device');
 
     $this->withToken($tokenResult->plainTextToken)

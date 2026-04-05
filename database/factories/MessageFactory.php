@@ -4,7 +4,6 @@ namespace NettSite\Messenger\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use NettSite\Messenger\Models\Message;
-use NettSite\Messenger\Models\MessengerUser;
 
 /**
  * @extends Factory<Message>
@@ -15,12 +14,14 @@ class MessageFactory extends Factory
 
     public function definition(): array
     {
-        $sender = MessengerUser::factory()->create();
+        /** @var class-string $userModel */
+        $userModel = config('messenger.user_model');
+        $sender = $userModel::factory()->create();
 
         return [
             'body' => fake()->paragraph(),
             'url' => fake()->optional()->url(),
-            'sender_type' => MessengerUser::class,
+            'sender_type' => $userModel,
             'sender_id' => $sender->getKey(),
             'scheduled_at' => null,
             'sent_at' => null,
