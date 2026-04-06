@@ -4,7 +4,7 @@ namespace NettSite\Messenger\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateReplyRequest extends FormRequest
+class CreateConversationMessageRequest extends FormRequest
 {
     public function rules(): array
     {

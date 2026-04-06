@@ -63,10 +63,10 @@ class Message extends Model
         return $this->hasMany(MessageReceipt::class);
     }
 
-    /** @return HasMany<Reply, $this> */
-    public function replies(): HasMany
+    /** @return HasMany<Conversation, $this> */
+    public function conversations(): HasMany
     {
-        return $this->hasMany(Reply::class);
+        return $this->hasMany(Conversation::class);
     }
 
     public function readCount(): int

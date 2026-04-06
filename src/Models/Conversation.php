@@ -5,19 +5,19 @@ namespace NettSite\Messenger\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
-class Reply extends Model
+class Conversation extends Model
 {
     use HasUuids;
 
-    protected $table = 'messenger_replies';
+    protected $table = 'messenger_conversations';
 
     protected $fillable = [
         'message_id',
         'user_type',
         'user_id',
-        'body',
     ];
 
     public function message(): BelongsTo
@@ -25,8 +25,14 @@ class Reply extends Model
         return $this->belongsTo(Message::class);
     }
 
-    public function author(): MorphTo
+    /** @return HasMany<ConversationMessage, $this> */
+    public function messages(): HasMany
     {
-        return $this->morphTo('user');
+        return $this->hasMany(ConversationMessage::class);
+    }
+
+    public function user(): MorphTo
+    {
+        return $this->morphTo();
     }
 }

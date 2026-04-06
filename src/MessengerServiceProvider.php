@@ -24,7 +24,8 @@ class MessengerServiceProvider extends PackageServiceProvider
                 'create_messenger_messages_table',
                 'create_messenger_message_recipients_table',
                 'create_messenger_message_receipts_table',
-                'create_messenger_replies_table',
+                'create_messenger_conversations_table',
+                'update_messenger_conversation_messages_table',
             ])
             ->runsMigrations()
             ->hasCommand(MessengerCommand::class)

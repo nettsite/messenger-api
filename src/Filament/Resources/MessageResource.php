@@ -13,7 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use NettSite\Messenger\Filament\Resources\MessageResource\Pages;
-use NettSite\Messenger\Filament\Resources\MessageResource\RelationManagers\RepliesRelationManager;
+use NettSite\Messenger\Filament\Resources\MessageResource\RelationManagers\ConversationsRelationManager;
 use NettSite\Messenger\Models\Group;
 use NettSite\Messenger\Models\Message;
 
@@ -111,7 +111,7 @@ class MessageResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RepliesRelationManager::class,
+            ConversationsRelationManager::class,
         ];
     }
 

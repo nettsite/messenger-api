@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('messenger_conversation_messages', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->char('conversation_id', 36);
+            $table->string('author_type');
+            $table->char('author_id', 36);
+            $table->text('body');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamps();
+
+            $table->foreign('conversation_id')->references('id')->on('messenger_conversations')->cascadeOnDelete();
+            $table->index(['author_type', 'author_id']);
+        });
+    }
+};

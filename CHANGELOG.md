@@ -2,6 +2,34 @@
 
 All notable changes to `nettsite/messenger` will be documented in this file.
 
+## [1.2.0] - 2026-04-06
+
+### Breaking changes
+
+- **Reply model removed.** The flat `messenger_replies` table and `Reply` model are replaced by per-user conversations. Run the new migrations and remove any direct references to `Reply` in your application code.
+- **API routes changed.** `GET /api/messenger/messages/{id}/replies` and `POST /api/messenger/messages/{id}/replies` are replaced by:
+  - `GET /api/messenger/messages/{id}/conversation` — returns the authenticated user's conversation thread for this message (404 if no conversation exists yet).
+  - `POST /api/messenger/messages/{id}/conversation/messages` — sends a message, creating the conversation on the first call.
+
+### Added
+
+- **Per-user conversation threads.** Each user who replies to a message gets a private `Conversation` record linking them to that message. All subsequent back-and-forth between the user and admin is stored as `ConversationMessage` records within that conversation. Broadcasts and group messages no longer share a single flat reply list — every recipient's thread is isolated.
+- **`messenger_conversations` table** — `(message_id, user_type, user_id)` with a unique constraint, ensuring one thread per user per message regardless of recipient type.
+- **`messenger_conversation_messages` table** — stores each message in a thread with `author_type`/`author_id` (polymorphic, supports both app users and admin users), `body`, and `read_at`.
+- **`Conversation` and `ConversationMessage` models** with full relationships (`message`, `user`, `messages`, `author`, `conversation`).
+- **Auto read-receipts.** `GET /conversation` marks all non-user-authored messages as read (sets `read_at`) when the user fetches the thread.
+- **`SendConversationMessageJob`** — dispatches FCM push notifications to the conversation's user when the admin replies. Skips self-notifications (user sending their own message does not trigger a push to themselves).
+- **`ConversationsRelationManager`** in the Filament Message resource — lists all conversations spawned from a message with unread counts, shows the full thread in a view panel using `RepeatableEntry`, and allows admin replies via a modal action.
+
+### Migration guide
+
+1. Run `php artisan vendor:publish --tag="messenger-migrations"` to publish the new stubs, then `php artisan migrate`.
+2. Drop or ignore `messenger_replies` — it is no longer used by the package.
+3. Update any API clients: replace calls to `/replies` with the new `/conversation` and `/conversation/messages` endpoints (see breaking changes above).
+4. Remove any direct usage of the `Reply` model or `RepliesController` from your application.
+
+---
+
 ## [1.1.1] - 2026-04-06
 
 ### Added

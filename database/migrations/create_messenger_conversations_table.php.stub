@@ -8,15 +8,15 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('messenger_replies', function (Blueprint $table) {
+        Schema::create('messenger_conversations', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->char('message_id', 36);
             $table->string('user_type');
             $table->char('user_id', 36);
-            $table->text('body');
             $table->timestamps();
 
             $table->foreign('message_id')->references('id')->on('messenger_messages')->cascadeOnDelete();
+            $table->unique(['message_id', 'user_type', 'user_id']);
             $table->index(['user_type', 'user_id']);
         });
     }
