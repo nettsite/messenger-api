@@ -34,6 +34,14 @@ class FCMService
                     'title' => $title,
                     'body' => $body,
                 ],
+                'android' => [
+                    'priority' => 'HIGH',
+                    'notification' => [
+                        'channel_id' => 'messenger_messages',
+                        'sound' => 'default',
+                        'priority' => 'HIGH',
+                    ],
+                ],
             ],
         ];
 

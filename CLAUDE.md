@@ -27,6 +27,7 @@ This is a **Laravel package** built on [spatie/laravel-package-tools](https://gi
 
 ### Delivery Architecture
 - **FCM (Firebase Cloud Messaging)** — Laravel calls the FCM HTTP API directly; no Firestore or Cloud Functions needed
+- FCM payload uses a `notification` block (auto-displayed by FCM SDK for background/terminated state) plus an `android` block specifying `channel_id: messenger_messages`, `sound: default`, and `priority: HIGH` — matching the channel created by the Flutter app on first launch
 - **Polling fallback** — mobile app polls on open/resume for non-GMS devices (post-2019 Huawei, etc.) and FCM failures
 - No WebSockets/Reverb required
 
