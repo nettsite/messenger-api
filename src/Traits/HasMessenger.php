@@ -35,10 +35,17 @@ trait HasMessenger
 
     public function registerDeviceToken(string $token, string $platform): DeviceToken
     {
+        // Search globally (not scoped to this user) so the token is atomically reassigned
+        // if it was previously registered to a different user on the same device.
         /** @var DeviceToken $deviceToken */
-        $deviceToken = $this->deviceTokens()->updateOrCreate(
+        $deviceToken = DeviceToken::updateOrCreate(
             ['token' => $token],
-            ['platform' => $platform, 'last_seen_at' => now()],
+            [
+                'user_type' => $this->getMorphClass(),
+                'user_id' => $this->getKey(),
+                'platform' => $platform,
+                'last_seen_at' => now(),
+            ],
         );
 
         return $deviceToken;

@@ -15,6 +15,7 @@ use NettSite\Messenger\Enums\UserStatus;
 use NettSite\Messenger\Http\Requests\LoginRequest;
 use NettSite\Messenger\Http\Requests\RegisterDeviceRequest;
 use NettSite\Messenger\Http\Requests\RegisterUserRequest;
+use NettSite\Messenger\Models\DeviceToken;
 use NettSite\Messenger\Models\MessengerEnrollment;
 
 class AuthController extends Controller
@@ -106,7 +107,12 @@ class AuthController extends Controller
         $token = $request->bearerToken();
 
         if ($token) {
-            PersonalAccessToken::findToken($token)?->delete();
+            $pat = PersonalAccessToken::findToken($token);
+
+            if ($pat) {
+                DeviceToken::where('token', $pat->name)->delete();
+                $pat->delete();
+            }
         }
 
         return response()->json(['message' => 'Logged out.']);
