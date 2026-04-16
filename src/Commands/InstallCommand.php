@@ -62,6 +62,14 @@ class InstallCommand extends Command
 
     private function publishMigrations(): void
     {
+        $existing = glob(database_path('migrations/*_create_messenger_enrollments_table.php'));
+
+        if (! empty($existing)) {
+            $this->line('  Messenger migrations already published. Skipping.');
+
+            return;
+        }
+
         $this->callSilently('vendor:publish', [
             '--tag' => 'messenger-migrations',
         ]);
