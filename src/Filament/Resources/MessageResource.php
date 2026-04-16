@@ -12,10 +12,12 @@ use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use NettSite\Messenger\Enums\UserStatus;
 use NettSite\Messenger\Filament\Resources\MessageResource\Pages;
 use NettSite\Messenger\Filament\Resources\MessageResource\RelationManagers\ConversationsRelationManager;
 use NettSite\Messenger\Models\Group;
 use NettSite\Messenger\Models\Message;
+use NettSite\Messenger\Models\MessengerEnrollment;
 
 class MessageResource extends Resource
 {
@@ -37,10 +39,11 @@ class MessageResource extends Resource
                 ->nullable(),
             Select::make('recipient_type')
                 ->options([
-                    'all' => 'All Users',
-                    'group' => 'Group',
                     'user' => 'Individual User',
+                    'group' => 'Group',
+                    'all' => 'Everyone',
                 ])
+                ->default('user')
                 ->required()
                 ->live(),
             Select::make('recipient_id')
@@ -49,11 +52,18 @@ class MessageResource extends Resource
                     /** @var class-string $userModel */
                     $userModel = config('messenger.user_model');
 
-                    return match ($get('recipient_type')) {
-                        'group' => Group::pluck('name', 'id'),
-                        'user' => $userModel::pluck('name', 'id'),
-                        default => [],
-                    };
+                    if ($get('recipient_type') === 'group') {
+                        return Group::pluck('name', 'id');
+                    }
+
+                    if ($get('recipient_type') === 'user') {
+                        $enrolledIds = MessengerEnrollment::where('status', UserStatus::Active)
+                            ->pluck('user_id');
+
+                        return $userModel::whereIn('id', $enrolledIds)->pluck('name', 'id');
+                    }
+
+                    return [];
                 })
                 ->visible(fn (Get $get) => in_array($get('recipient_type'), ['user', 'group']))
                 ->required(fn (Get $get) => in_array($get('recipient_type'), ['user', 'group']))

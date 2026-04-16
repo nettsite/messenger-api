@@ -1,6 +1,6 @@
 {
     "name": "nettsite/messenger-api",
-    "version": "1.3.8",
+    "version": "1.3.9",
     "description": "Push-based messaging from Laravel to mobile and web users, with Filament admin UI, FCM delivery, and Sanctum API.",
     "keywords": [
         "nettsite",
